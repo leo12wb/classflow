@@ -191,55 +191,85 @@ GET  /certificates/{id}/download         Download PDF
 
 ## Instalação
 
-### Pré-requisitos
+### Com Docker (recomendado)
 
-- PHP 8.2+
-- Composer
-- Node.js 18+
-- MySQL / MariaDB
-
-### Passo a passo
+**Pré-requisito:** Docker + Docker Compose instalados.
 
 ```bash
-# 1. Instalar dependências PHP
-composer install
+# 1. Copiar e configurar o .env
+cp .env.docker .env
 
-# 2. Instalar dependências Node
+# 2. Gerar APP_KEY e colar no .env
+docker run --rm php:8.3-alpine php -r "echo 'APP_KEY=base64:'.base64_encode(random_bytes(32)).PHP_EOL;"
+
+# 3. Subir os containers (build automático)
+docker compose up -d --build
+
+# 4. Rodar seeders (opcional — dados de exemplo)
+docker compose exec app php artisan db:seed
+```
+
+Acesse: **http://localhost:8000**
+
+---
+
+### Sem Docker (local)
+
+**Pré-requisitos:** PHP 8.2+, Composer, Node.js 18+, MySQL.
+
+```bash
+# 1. Instalar dependências
+composer install
 npm install
 
-# 3. Configurar ambiente
+# 2. Configurar ambiente
 cp .env.example .env
 php artisan key:generate
 
-# 4. Configurar banco de dados no .env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
+# 3. Banco de dados no .env
 DB_DATABASE=mini_ead
 DB_USERNAME=root
 DB_PASSWORD=
 
-# 5. Criar banco e rodar migrations + seeders
+# 4. Migrations + seeders
 php artisan migrate --seed
 
-# 6. Criar link de storage (thumbnails e certificados)
+# 5. Storage e assets
 php artisan storage:link
-
-# 7. Build dos assets
 npm run build
+
+# 6. Iniciar
+php artisan serve
 ```
 
 ---
 
-## Executando
+## Executando (local)
 
 ```bash
-# Servidor Laravel
-php artisan serve
-# Acesse: http://localhost:8000
+php artisan serve   # http://localhost:8000
+npm run dev         # hot reload de assets (porta 5173)
+```
 
-# Assets em modo desenvolvimento (hot reload)
-npm run dev
+---
+
+## Comandos Docker úteis
+
+```bash
+# Ver logs
+docker compose logs -f app
+
+# Acessar o container
+docker compose exec app sh
+
+# Rodar artisan
+docker compose exec app php artisan <comando>
+
+# Parar tudo
+docker compose down
+
+# Parar e apagar volumes (banco de dados)
+docker compose down -v
 ```
 
 ---
